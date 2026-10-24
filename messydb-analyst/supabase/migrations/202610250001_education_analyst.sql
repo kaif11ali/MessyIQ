@@ -120,7 +120,7 @@ begin
       cohort_status := 'Graduated';
     else
       cohort_status := 'Enrolled';
-    end case;
+    end if;
 
     if cohort_status = 'Withdrew' then
       insert into public.education_academic_events

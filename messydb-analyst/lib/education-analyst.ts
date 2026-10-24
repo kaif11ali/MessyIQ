@@ -98,9 +98,12 @@ export function summarizeRows(rows: StudentRow[], intent: EducationIntent): Anal
     ];
     const reasonRows = countBy(withLeave.filter((row) => row.reason), (row) => row.reason ?? "Not recorded");
     aggregateRows = Object.entries(reasonRows)
+      .filter(([, count]) => count >= 5)
       .map(([reason, count]) => ({ reason, students: count }))
       .sort((a, b) => Number(b.students) - Number(a.students));
-    summary = `${withLeave.length} students have a latest status of leave, withdrawal or transfer. The most common recorded reason is ${aggregateRows[0]?.reason ?? "not recorded"}.`;
+    const withheldReasons = Object.values(reasonRows).filter((count) => count < 5).reduce((total, count) => total + count, 0);
+    if (withheldReasons > 0) aggregateRows.push({ reason: "Small groups withheld", students: withheldReasons });
+    summary = `${withLeave.length} students have a latest status of leave, withdrawal or transfer. ${aggregateRows[0] && aggregateRows[0].reason !== "Small groups withheld" ? `The most common reportable reason is ${aggregateRows[0].reason}.` : "Specific reasons are withheld when fewer than five records share them."}`;
   } else if (intent === "graduation") {
     metrics = [
       { label: "Graduates", value: String(graduates.length), detail: "Latest status recorded" },
@@ -108,9 +111,12 @@ export function summarizeRows(rows: StudentRow[], intent: EducationIntent): Anal
       { label: "Cohort", value: String(Math.min(...rows.map((row) => row.cohort))), detail: "Earliest listed cohort" },
     ];
     aggregateRows = Object.entries(countBy(graduates, "program"))
+      .filter(([, students]) => students >= 5)
       .map(([program, students]) => ({ program, graduates: students }))
       .sort((a, b) => Number(b.graduates) - Number(a.graduates));
-    summary = `${graduates.length} of ${total} students have graduated. ${aggregateRows[0]?.program ?? "No program"} has the largest graduate count.`;
+    const withheldGraduates = Object.values(countBy(graduates, "program")).filter((count) => count < 5).reduce((sum, count) => sum + count, 0);
+    if (withheldGraduates > 0) aggregateRows.push({ program: "Small groups withheld", graduates: withheldGraduates });
+    summary = `${graduates.length} of ${total} students have graduated. ${aggregateRows[0] && aggregateRows[0].program !== "Small groups withheld" ? `${aggregateRows[0].program} has the largest reportable graduate count.` : "Program counts are withheld when fewer than five records share them."}`;
   } else if (intent === "at_risk") {
     metrics = [
       { label: "Needs attention", value: String(atRisk.length), detail: `${percentage(atRisk.length, total)}% of current records` },

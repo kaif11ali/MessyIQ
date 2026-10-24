@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MessyIQ | Education Dashboard",
-  description: "A read-only overview of enrollment, student progress, and support signals.",
+  title: "MessyIQ | Multi-Industry Analyst",
+  description: "Read-only, aggregate insights for education, retail, workforce, and operations.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
